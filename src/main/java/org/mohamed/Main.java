@@ -15,7 +15,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import javax.imageio.ImageIO;
@@ -24,20 +23,18 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
     }
-    private static InputStream stream = Main.class.getClassLoader().getResourceAsStream("application.properties");
-    private static Properties prop ;
+
+    final static String accessKey  = System.getenv("accessKey");
+    final static String secretKey = System.getenv("secretKey");
+    final String bucketToPutOn = System.getenv("bucketToPutOn");
+    final double outputQuality = Double.parseDouble(System.getenv("outputQuality"));
+    final double scale = Double.parseDouble(System.getenv("scale"));
     public String handleRequest(final S3Event input, final Context context) throws IOException {
 
         LambdaLogger logger = context.getLogger();
 
         logger.log("starting handleRequest lambda function");
 
-        //get the accesskey and secretkey from the properties file
-        prop = new Properties();
-        prop.load(stream);
-        String accessKey = prop.getProperty("accessKey");
-        String secretKey = prop.getProperty("secretKey");
-        String bucketToPutOn = prop.getProperty("bucketToPutOn");
 
         //create aws credentials
         final AWSCredentials credentials = new BasicAWSCredentials(accessKey,secretKey);
@@ -96,9 +93,8 @@ public class Main {
         return "";
     }
 
-    private  static byte[] getReducedFile(InputStream file , String fileType ){
-        double outputQuality = Double.parseDouble(prop.getProperty("outputQuality"));
-        double scale = Double.parseDouble(prop.getProperty("scale"));
+    private  byte[] getReducedFile(InputStream file , String fileType ){
+
         try {
             BufferedImage thumbnail =Thumbnails.of(file)
                     .scale(scale)
